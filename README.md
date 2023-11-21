@@ -1,0 +1,9 @@
+# FAS-DualStream
+Implementation of paper [Bandpass Filter Based Dual-stream Network for Face Anti-spoofing (3rd FAS CVPR2023)](https://openaccess.thecvf.com/content/CVPR2023W/FAS/papers/Lu_Bandpass_Filter_Based_Dual-Stream_Network_for_Face_Anti-Spoofing_CVPRW_2023_paper.pdf)
+## Dataset
+- Related to [FAS Wild CVPRW23](https://github.com/deepinsight/insightface/tree/master/challenges/cvpr23-fas-wild)
+## Training
+- Use ViTS14-dinov2 as backbone
+```
+python train.py --train_txt fas_train.txt --val_txt fas_valid.txt --batch-size 16 --save vits14-dinov2 --lr 0.0001 --epochs 10 --fp16
+```
