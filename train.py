@@ -20,6 +20,7 @@ def calc_accuracy(logits, labels):
     pred = sigmoid(logits)
     pred = np.where(pred >= 0.5, 1.0, 0.0)
     pred = np.squeeze(pred)
+    labels = np.where(labels >= 0.5, 1.0, 0.0)
     labels = np.squeeze(labels)
 
     assert len(pred) == len(labels)
@@ -47,7 +48,7 @@ def finetune(args, is_load = False):
     # assert args.train_dataset is not None, "Please provide a training dataset."
     use_cuda = True if args.device == "cuda" else False
 
-    model = FaceEncoder('dinov2_vits14', '', image_size = 224, feature_dim = 384)
+    model = FaceEncoder('r18_imagenet', '', image_size = 224, feature_dim = 512)
     if args.load is not None:
         print('  - Loading ', args.load)
         model = model.load(args.load)
@@ -105,7 +106,7 @@ def finetune(args, is_load = False):
     best_acc = 0.0
     input_key = 'images'
     print_every = 100
-    save_every = 5000
+    save_every = 1000
     for epoch in range(start_epoch, args.epochs):
         print(f"Start epoch: {epoch}")
         model.train()
@@ -157,7 +158,7 @@ def finetune(args, is_load = False):
                 scaler.update()
                 # optimizer.zero_grad()
             else:
-                logits_fused, logits_org, logit_bpf = model(inputs)
+                logits_fused, logits_org, logit_bpf = model(inputs, inputs_bpf)
                 loss = loss_fn(logits_fused, labels) + 0.5*loss_fn(logits_org, labels) + 0.5*loss_fn(logit_bpf, labels)
 
                 losses.update(loss.item(), inputs.size(0))

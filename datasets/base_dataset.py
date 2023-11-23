@@ -101,9 +101,10 @@ class FASData(Dataset):
                 data_path,
                 input_size = 112,
                 is_train=True,
-                aug_mixup_prob = 0.15,
+                aug_mixup_prob = 0.0, # Disable
                 aug_compress_prob = 0.15,
-                aug_downscale_prob = 0.15):
+                aug_downscale_prob = 0.15,
+                aug_blur_prob = 0.15):
         super(FASData, self).__init__()
         # Gather all data
         self.data = open(data_path).read().strip('\n').split('\n')
@@ -126,6 +127,7 @@ class FASData(Dataset):
         self.aug_mixup_prob = aug_mixup_prob
         self.aug_compress_prob = aug_compress_prob
         self.aug_downscale_prob = aug_downscale_prob
+        self.aug_blur_prob = aug_blur_prob
 
         if self.is_train:
             self.transforms = transforms.Compose([
@@ -143,35 +145,39 @@ class FASData(Dataset):
     def __len__(self):
         return len(self.data)
 
+    def aug_single_image(self, img):
+        if random.random() > 0.5:
+            img = cv2.flip(img, 1)
+        if random.random() < self.aug_blur_prob:
+            img = transform_blur(img)
+        if random.random() < self.aug_downscale_prob:
+            img = transform_resize(img, resize_range = (64, 224), target_size = 224) 
+        if random.random() < self.aug_compress_prob:
+            img = transform_JPEGcompression(img, compress_range = (40, 100))
+        return img 
+
     def __getitem__(self, idx):
         img, target = self.data[idx].split(',')
         target = int(target)
         img = cv2.cvtColor(cv2.imread(img), cv2.COLOR_BGR2RGB)
-        if random.random() > 0.5:
-            img = cv2.flip(img, 1)
-        # Mixup
-        if random.random() < self.aug_mixup_prob:
-            if target == 0:
-                # Select bondafine
-                img_ref, target_ref = random.choice(self.data_bonda).split(',')
-            elif target == 1:
-                # Select spoof
-                img_ref, target_ref = random.choice(self.data_spoof).split(',')
-            else:
-                raise NotImplementedError("Invalid record: {}".format(self.data[idx]))
-            target_ref = int(target_ref)
-            img_ref = cv2.cvtColor(cv2.imread(img_ref), cv2.COLOR_BGR2RGB)
-            if random.random() > 0.5:
-                img_ref = cv2.flip(img_ref, 1)
-            img, target = transform_mixup(img, float(target), img_ref, float(target_ref))
-        assert target >= 0 and target <= 1
-        # Resize
-        if random.random() < self.aug_downscale_prob:
-            img = transform_resize(img, resize_range = (64, 224), target_size = 224) 
-        # Compress
-        if random.random() < self.aug_compress_prob:
-            img = transform_JPEGcompression(img, compress_range = (60, 100))
+        if self.is_train:
+            img = self.aug_single_image(img)
+            # Mixup
+            if random.random() < self.aug_mixup_prob:
+                if target == 0:
+                    # Select bondafine
+                    img_ref, target_ref = random.choice(self.data_bonda).split(',')
+                elif target == 1:
+                    # Select spoof
+                    img_ref, target_ref = random.choice(self.data_spoof).split(',')
+                else:
+                    raise NotImplementedError("Invalid record: {}".format(self.data[idx]))
+                target_ref = int(target_ref)
+                img_ref = cv2.cvtColor(cv2.imread(img_ref), cv2.COLOR_BGR2RGB)
+                img_ref = self.aug_single_image(img_ref)
+                img, target = transform_mixup(img, float(target), img_ref, float(target_ref))
 
+        assert target >= 0 and target <= 1
         img_filted = transform_band_pass_filter(img, self.kernel_bpf.copy())
 
         # Transform to Tensor
