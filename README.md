@@ -10,5 +10,5 @@ python train.py --train_txt fas_train.txt --val_txt fas_valid.txt --batch-size 1
 ## Result
 | Backbone                | ACER      | APCER     | BPCER     |
 |-------------------------|-----------|-----------|-----------|
-| R18 (Imagenet)          | 7,319     | **3,641** | 10,997    |
-| R18-DualBand (Imagenet) | **5,885** | 4,840     | **6,833** |
+| R18 (Imagenet)          | 6,803     | 5,061 | 8,546    |
+| R18-DualBand (Imagenet) | **5,885** | **4,840**     | **6,833** |
