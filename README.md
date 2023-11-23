@@ -3,7 +3,7 @@ Implementation of paper [Bandpass Filter Based Dual-stream Network for Face Anti
 ## Dataset
 - Related to [FAS Wild CVPRW23](https://github.com/deepinsight/insightface/tree/master/challenges/cvpr23-fas-wild)
 ## Training
-- Use ViTS14-dinov2 as backbone
+- Use R18 as backbone
 ```
-python train.py --train_txt fas_train.txt --val_txt fas_valid.txt --batch-size 16 --save vits14-dinov2 --lr 0.0001 --epochs 10 --fp16
+python train.py --train_txt fas_train.txt --val_txt fas_valid.txt --batch-size 16 --save r18-imagenet --lr 0.0001 --epochs 10 --fp16
 ```
